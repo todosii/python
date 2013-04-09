@@ -216,15 +216,17 @@ class BaseServer:
         """
         self.__serving = True
         self.__is_shut_down.clear()
-        while self.__serving:
-            # XXX: Consider using another file descriptor or
-            # connecting to the socket to wake this up instead of
-            # polling. Polling reduces our responsiveness to a
-            # shutdown request and wastes cpu at all other times.
-            r, w, e = select.select([self], [], [], poll_interval)
-            if r:
-                self._handle_request_noblock()
-        self.__is_shut_down.set()
+        try:
+            while self.__serving:
+                # XXX: Consider using another file descriptor or
+                # connecting to the socket to wake this up instead of
+                # polling. Polling reduces our responsiveness to a
+                # shutdown request and wastes cpu at all other times.
+                r, w, e = select.select([self], [], [], poll_interval)
+                if r:
+                    self._handle_request_noblock()
+        finally:
+            self.__is_shut_down.set()
 
     def shutdown(self):
         """Stops the serve_forever loop.
